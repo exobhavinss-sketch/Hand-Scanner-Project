@@ -2,6 +2,17 @@
 
 AI Hand Scanner is a local desktop computer-vision project using MediaPipe Hand Landmarker, OpenCV, NumPy, and PySide6. Phase 5 integrates the tracking engine, gesture recognition, premium dashboard, and bounded gesture history.
 
+## Recent changes
+
+- Improved thumb detection using thumb reach, thumb-chain geometry, thumb-to-index separation, handedness, and mirrored-preview handling.
+- Added regression coverage for Open Palm and Thumbs Up detection with both Left and Right handedness.
+- Added Windows gesture volume control:
+  - Open Palm raises master volume by one 8% step.
+  - Closed Fist lowers master volume by one 8% step.
+  - Repeated frames do not repeatedly change the volume.
+- Added `src/volume_control.py` using `pycaw` and `comtypes`, with graceful fallback when Windows audio control is unavailable.
+- Added volume-control unit tests and updated the dependency list.
+
 ## Features
 
 - MediaPipe Tasks Hand Landmarker integration with an explicit local model asset path.
@@ -51,7 +62,7 @@ The worker passes each `HandObservation.landmarks` and `HandObservation.handedne
 python -m pytest -q
 ```
 
-The automated suite uses synthetic landmarks and does not require a webcam, MediaPipe model, or GUI display. Manual camera testing requires installing dependencies, granting camera permission, and running `python main.py`.
+The automated suite uses synthetic landmarks and does not require a webcam, MediaPipe model, or GUI display. The current suite contains 17 passing tests. Manual camera and gesture-volume testing requires installing dependencies, granting camera permission, and running `python main.py`.
 
 For a direct engine check, instantiate `ScannerWorker` from a worker thread, call `start()`, repeatedly call `read()`, and inspect `TrackingFrame.hands`, `TrackingFrame.fps`, and `TrackingFrame.camera_connected`. The helper `process_frame()` accepts an already-captured BGR NumPy frame for integration tests.
 
