@@ -1,0 +1,2 @@
+"""AI Hand Scanner package."""
+
