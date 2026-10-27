@@ -4,9 +4,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QWidget
 
+from .theme import ACCENT, BORDER, DANGER, TEXT_SECONDARY
+
 
 class CameraWidget(QWidget):
-    """Responsive camera canvas with explicit idle and error states."""
+    """The visual center of the app: a quiet, aspect-ratio-safe camera canvas."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -34,19 +36,28 @@ class CameraWidget(QWidget):
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        painter.fillRect(self.rect(), QColor("#070b10"))
+        painter.fillRect(self.rect(), QColor("#0C0D0F"))
+
         if not self._pixmap.isNull() and self._state == "scanning":
-            scaled = self._pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            scaled = self._pixmap.scaled(
+                self.size(), Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
             x = (self.width() - scaled.width()) // 2
             y = (self.height() - scaled.height()) // 2
             painter.drawPixmap(x, y, scaled)
-            painter.setPen(QPen(QColor("#39c7ee"), 1))
+            painter.setPen(QPen(QColor(BORDER), 1))
             painter.drawRect(x, y, scaled.width() - 1, scaled.height() - 1)
             return
 
-        painter.setPen(QPen(QColor("#243342"), 1))
-        painter.drawRect(18, 18, self.width() - 36, self.height() - 36)
-        painter.setPen(QColor("#39c7ee" if self._state != "error" else "#ef8d8d"))
-        painter.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        inset = 20
+        painter.setPen(QPen(QColor(BORDER), 1))
+        painter.drawRoundedRect(inset, inset, self.width() - inset * 2, self.height() - inset * 2, 12, 12)
+        state_color = DANGER if self._state == "error" else ACCENT
+        painter.setPen(QColor(state_color))
+        painter.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
         painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self._message)
+        painter.setPen(QColor(TEXT_SECONDARY))
+        painter.setFont(QFont("Segoe UI", 10))
+        painter.drawText(0, self.height() // 2 + 28, self.width(), 22, Qt.AlignmentFlag.AlignCenter, "Local camera processing")
 

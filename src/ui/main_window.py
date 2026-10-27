@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QThread, Qt, Signal, Slot
+from PySide6.QtCore import QThread, Signal, Slot
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (QComboBox, QFileDialog, QFrame, QHBoxLayout, QLabel,
                                QListWidget, QMainWindow, QPushButton, QSizePolicy,
@@ -16,7 +16,7 @@ from ..scanner import ScannerWorker, TrackingFrame
 from ..volume_control import VolumeAction, VolumeController
 from .camera_widget import CameraWidget
 from .metrics_panel import MetricsPanel
-from .theme import ACCENT, ACCENT_DARK, BORDER, MUTED, PANEL_ALT, STYLESHEET, panel
+from .theme import ACCENT, BORDER, DANGER, PANEL_ALT, STYLESHEET, panel
 
 
 @dataclass(frozen=True)
@@ -70,8 +70,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AI Hand Scanner")
-        self.resize(1380, 850)
-        self.setMinimumSize(1060, 700)
+        self.resize(1320, 820)
+        self.setMinimumSize(1000, 680)
         self.setStyleSheet(STYLESHEET)
         self.thread: ScanThread | None = None
         self.available_cameras: list[int] = []
@@ -92,19 +92,19 @@ class MainWindow(QMainWindow):
 
     def _build_sidebar(self) -> QFrame:
         sidebar = panel()
-        sidebar.setFixedWidth(260)
+        sidebar.setFixedWidth(232)
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(20, 20, 20, 18)
         layout.setSpacing(10)
 
-        identity = QLabel("AI HAND\nSCANNER")
+        identity = QLabel("AI\nHand Scanner")
         identity.setObjectName("title")
         layout.addWidget(identity)
-        label = self._label("REAL-TIME COMPUTER VISION", "eyebrow")
+        label = self._label("Local computer vision", "eyebrow")
         layout.addWidget(label)
         layout.addSpacing(24)
 
-        layout.addWidget(self._label("CAMERA SOURCE", "eyebrow"))
+        layout.addWidget(self._label("Camera source", "eyebrow"))
         camera_row = QHBoxLayout()
         self.camera_combo = QComboBox()
         self.camera_combo.setToolTip("Select an available camera")
@@ -114,9 +114,9 @@ class MainWindow(QMainWindow):
         camera_row.addWidget(self.refresh_camera_button)
         layout.addLayout(camera_row)
 
-        self.start_button = QPushButton("Start Scan")
+        self.start_button = QPushButton("Start scan")
         self.start_button.setObjectName("primary")
-        self.stop_button = QPushButton("Stop Scan")
+        self.stop_button = QPushButton("Stop scan")
         self.stop_button.setEnabled(False)
         layout.addWidget(self.start_button)
         layout.addWidget(self.stop_button)
@@ -126,11 +126,11 @@ class MainWindow(QMainWindow):
         self.camera_combo.currentIndexChanged.connect(self._camera_selection_changed)
 
         layout.addSpacing(18)
-        layout.addWidget(self._label("VIEW SETTINGS", "eyebrow"))
-        self.mirror_button = QPushButton("Mirrored Preview")
+        layout.addWidget(self._label("View settings", "eyebrow"))
+        self.mirror_button = QPushButton("Mirror preview")
         self.mirror_button.setCheckable(True)
         self.mirror_button.setChecked(True)
-        self.landmark_button = QPushButton("Landmark Overlay")
+        self.landmark_button = QPushButton("Show landmarks")
         self.landmark_button.setCheckable(True)
         self.landmark_button.setChecked(True)
         self.mirror_button.setToolTip("Flip the preview horizontally for a selfie-style view")
@@ -143,7 +143,7 @@ class MainWindow(QMainWindow):
         status_box.setStyleSheet(f"QFrame {{ background: {PANEL_ALT}; border: 1px solid {BORDER}; border-radius: 9px; }}")
         status_layout = QVBoxLayout(status_box)
         status_layout.setContentsMargins(12, 10, 12, 10)
-        status_layout.addWidget(self._label("CONNECTION", "eyebrow"))
+        status_layout.addWidget(self._label("Connection", "eyebrow"))
         self.connection_label = QLabel("●  READY")
         self.connection_label.setObjectName("statusLabel")
         status_layout.addWidget(self.connection_label)
@@ -156,8 +156,11 @@ class MainWindow(QMainWindow):
         layout.setSpacing(12)
 
         header = QHBoxLayout()
-        header.addWidget(self._label("LIVE SCAN", "eyebrow"))
+        header.addWidget(self._label("Scanner", "pageTitle"))
         header.addStretch(1)
+        self.camera_top_status = QLabel("Camera unavailable")
+        self.camera_top_status.setObjectName("muted")
+        header.addWidget(self.camera_top_status)
         self.header_state = QLabel("IDLE")
         self.header_state.setObjectName("statePill")
         header.addWidget(self.header_state)
@@ -184,7 +187,7 @@ class MainWindow(QMainWindow):
         widget = panel()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(18, 14, 18, 14)
-        layout.addWidget(self._label("CURRENT GESTURE", "eyebrow"))
+        layout.addWidget(self._label("Current gesture", "eyebrow"))
         self.gesture_label = QLabel("No hand detected")
         self.gesture_label.setObjectName("gestureValue")
         self.gesture_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -198,7 +201,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(18, 14, 18, 10)
         heading = QHBoxLayout()
-        heading.addWidget(self._label("RECENT GESTURE EVENTS", "eyebrow"))
+        heading.addWidget(self._label("Recent gestures", "eyebrow"))
         heading.addStretch(1)
         self.clear_history_button = QPushButton("Clear")
         self.export_history_button = QPushButton("Export CSV")
@@ -366,7 +369,9 @@ class MainWindow(QMainWindow):
 
     def _set_connection(self, text: str, healthy: bool):
         self.connection_label.setText("●  " + text)
-        self.connection_label.setStyleSheet(f"color: {ACCENT if healthy else '#ef8d8d'};")
+        self.connection_label.setStyleSheet(f"color: {ACCENT if healthy else DANGER};")
+        self.camera_top_status.setText("Camera connected" if healthy and text == "CONNECTED" else text.title())
+        self.camera_top_status.setStyleSheet(f"color: {ACCENT if healthy else DANGER};")
 
     @staticmethod
     def _label(text: str, object_name: str) -> QLabel:

@@ -14,6 +14,7 @@ def main() -> int:
         return 1
     app = QApplication(sys.argv)
     app.setApplicationName("AI Hand Scanner")
+    app.setStyle("Fusion")
     window = MainWindow()
     window.show()
     return app.exec()

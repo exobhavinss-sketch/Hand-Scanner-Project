@@ -1,4 +1,4 @@
-# AI Hand Scanner — Phase 5 Full Integration
+# AI Hand Scanner — Phase 6 Production UI Polish
 
 AI Hand Scanner is a local desktop computer-vision project using MediaPipe Hand Landmarker, OpenCV, NumPy, and PySide6. Phase 5 integrates the tracking engine, gesture recognition, premium dashboard, and bounded gesture history.
 
@@ -27,6 +27,12 @@ AI Hand Scanner is a local desktop computer-vision project using MediaPipe Hand 
 - Keyboard shortcuts: Space starts/stops, Escape stops, Ctrl+R rescans cameras, Ctrl+Q exits.
 - Windows volume control: a stabilized Open Palm raises master volume by one step; a stabilized Closed Fist lowers it. Repeated frames do not repeatedly change volume.
 - All planned computer-vision processing is local; frames are not uploaded.
+
+## Interface design
+
+The Phase 6 interface uses an Apple-inspired, Windows-safe visual language: a compact control rail, a restrained top bar, a dominant live preview, and a quiet metric strip. The design uses matte graphite surfaces (`#101113`, `#17181B`, `#202124`), soft white labels, muted secondary text, and electric cyan only for active or meaningful states. Typography uses the system `Segoe UI` stack with fallbacks, so the app does not depend on Apple-only fonts.
+
+The visual system is centralized in `src/ui/theme.py`, including spacing, radii, control heights, surface colors, focus states, and status colors. Camera idle/error states are explicit, the preview keeps its aspect ratio, and all inference continues to run in the background worker while Qt signals update the interface.
 
 ## Architecture
 
